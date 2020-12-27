@@ -23,8 +23,11 @@ void setup() {
   }
 }
 
+boolean state = false;
+
 void loop() {
   int t = dht.readTemperature();
+  int h = dht.readHumidity();
   
   if (isnan(t)){
     Serial.println("Failed to read from DHT");
@@ -36,7 +39,7 @@ void loop() {
     //REPORT
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
-      String apicall = "http://SERVERADDRESS/malting/api.php?temp=" + String(t); //API CALL ADDRESS
+      String apicall = "http://SERVERADDRESS/malting/api.php?temp=" + String(t) + "&humid=" + String(h); //API CALL ADDRESS
       Serial.println(apicall);
       http.begin(apicall);
       int httpCode = http.GET();   
@@ -51,10 +54,21 @@ void loop() {
 
 
     //RELAY
-    if(t >= 16){
-      digitalWrite(D1, HIGH);
-    }else{
-      digitalWrite(D1, LOW);
+    if(state == false){
+      if(t >= 19){
+        digitalWrite(D1, HIGH);
+      }else{
+        digitalWrite(D1, LOW);
+        state = true;
+      }
+    }
+    if(state == true){
+      if(t >= 21){
+        digitalWrite(D1, HIGH);
+        state = false;
+      }else{
+        digitalWrite(D1, LOW);
+      }
     }
       
     delay(10000);
